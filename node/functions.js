@@ -76,3 +76,18 @@ workflow.forEach(applier);
 
 data = "";
 workflow.forEach(applier);
+
+/* -------------------------------------- */
+/* LAMBDA FUNCTIONS */
+/* -------------------------------------- */
+
+// a function without a name, created and consumed at the same time
+const hello = (paramNum) => {
+  let str = "";
+  for (let i = 0; i < paramNum; i++) {
+    str += "Hello";
+  }
+  console.log(str);
+};
+
+hello(3);
