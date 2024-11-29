@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-
+scale=1.0"
+    />
+    <title>Flexible Loan Calculator</title>
+    <style>
+      label {
+        width: 11%;
+        display: inline-block;
+      }
+      #result {
+        margin-top: 10pt;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Flexible Loan Calculator</h1>
+    <label for="loanAmount">Loan Amount ($):</label>
+    <input type="text" id="loanAmount" /><br /><br />
+    <label for="annualInterest">Annual Interest Rate (%):</label>
+    <input type="text" id="annualInterest" /><br /><br />
+    <label for="loanTerm">Loan Term (Years):</label>
+    <input type="text" id="loanTerm" /><br /><br />
+    <label for="monthlyPayment">Monthly Payment ($):</label>
+    <input type="text" id="monthlyPayment" /><br /><br />
+    <button id="calculateButton">Calculate</button>
+    <div id="result"></div>
+    <script>
+      /* Author: Maksim Petrushin */
+      /* Course: COP4020 - Programming Languages */
+      /* Term: Fall 2024 */
+      /* Assignment: HW4 - JavaScript */
+      "use strict";
+
+      // html elements (global)
+      const loanAmountInput = document.getElementById("loanAmount");
+      const annualInterestInput = document.getElementById("annualInterest");
+      const loanTermInput = document.getElementById("loanTerm");
+      const monthlyPaymentInput = document.getElementById("monthlyPayment");
+      const button = document.getElementById("calculateButton");
+      const result = document.getElementById("result");
+
+      // global flags for whether there is an error
+      // and if not error, which field is left empty
+      let empty = {};
+      let error = false;
+
+      function onClick(event) {
+        // Refreshing the status message. Will stay empty if all is valid
+        result.innerHTML = "";
+        empty = {};
+        error = false;
+
+        // storing each given input and their printed name nicely
+        const loanAmount = {
+          val: loanAmountInput.value,
+          name: "Loan Amount",
+        };
+        const annualInterest = {
+          val: annualInterestInput.value,
+          name: "Annual Interest",
+        };
+        const loanTerm = {
+          val: loanTermInput.value,
+          name: "Loan Term (Years)",
+        };
+        const monthlyPayment = {
+          val: monthlyPaymentInput.value,
+          name: "Monthly Payment",
+        };
+        const arr = [loanAmount, annualInterest, loanTerm, monthlyPayment];
+
+        // control flow of the program
+        checkOneEmpty(arr);
+        arr.map((element) => validate(element));
+        calculate(arr);
+        setColor();
+      }
+
+      // checks that one input is left empty
+      // if so, it also stores which one is it
+      function checkOneEmpty(array) {
+        let emptyCount = 0;
+        let emptyIndex = -1;
+
+        // counts empty fields
+        for (let index = 0; index < array.length; index++) {
+          const el = array[index];
+          if (el.val == "" || el.val == null) {
+            emptyIndex = index;
+            emptyCount++;
+          }
+        }
+
+        // decides logic based on how many empty fields
+        switch (emptyCount) {
+          case 0:
+            result.innerHTML = "Error: Leave one field blank for calculation";
+            error = true;
+            return;
+          case 1:
+            empty = array[emptyIndex];
+            return;
+          default:
+            result.innerHTML =
+              "Error: Please leave loan amount or monthly payment or interest rate empty";
+            error = true;
+        }
+      }
+
+      function validate(obj) {
+        // if there is already something wrong
+        // don't update the status and just leave
+        if (error === true) return;
+
+        // check for is years are empty
+        if (
+          obj.name === "Loan Term (Years)" &&
+          (obj.val == "" || obj.val == null)
+        ) {
+          result.innerHTML = "Error: Please provide year field";
+          error = true;
+          return;
+        }
+
+        // check for valid, parsable numbers in input
+        // edge case: if this is the field that is left empty, it's valid
+        const num = parseFloat(obj.val);
+        if ((isNaN(num) || !isFinite(num)) && obj.name !== empty?.name) {
+          result.innerHTML = `${obj.name} is not a valid number`;
+          error = true;
+          return;
+        }
+        // checks for positive numbers in input
+        if (num <= 0) {
+          result.innerHTML = "Error: Please provide positive numbers";
+          error = true;
+          return;
+        }
+      }
+
+      // Checks which field was left empty and based on that chooses the calculation
+      function calculate(arr) {
+        if (error === false) {
+          switch (empty.name) {
+            case "Monthly Payment":
+              calculateMonthyPlayment(arr);
+              return;
+            case "Annual Interest":
+              calculateAnnualInterest(arr);
+              return;
+            case "Loan Amount":
+              calculateLoanAmount(arr);
+              return;
+            default:
+              return;
+          }
+        }
+      }
+
+      // Calculates the Monthly Payment Amount (M) given r, P, and n
+      function calculateMonthyPlayment(arr) {
+        let r = parseFloat(arr[1].val);
+        let P = parseFloat(arr[0].val);
+        let n = parseFloat(arr[2].val);
+        let M = (P * Math.pow(1 + r / 100, n)) / (12 * n);
+        result.innerHTML = `Monthly Paymen is: <b>$${Math.trunc(M)}</b>`;
+      }
+
+      // Calculates the Annual Interest Rate (r) given P, n, and M
+      function calculateAnnualInterest(arr) {
+        let P = parseFloat(arr[0].val);
+        let n = parseFloat(arr[2].val);
+        let M = parseFloat(arr[3].val);
+        let r = 100 * (Math.pow((M * 12 * n) / P, 1 / n) - 1);
+        result.innerHTML = `Annual Interest is: <b>${Math.round(r)}%</b>`;
+      }
+
+      // Calculates the Loan Amount (P) given r, n, and M
+      function calculateLoanAmount(arr) {
+        let r = parseFloat(arr[1].val);
+        let n = parseFloat(arr[2].val);
+        let M = parseFloat(arr[3].val);
+        let P = (12 * M * n) / Math.pow(1 + r / 100, n);
+        result.innerHTML = `Loan Amount is: <b>$${Math.round(P)}</b>`;
+      }
+
+      // Setting color of the text in the status message
+      function setColor() {
+        if (error === true) {
+          result.style.color = "red";
+        } else {
+          result.style.color = "black";
+        }
+      }
+
+      button.addEventListener("click", onClick);
+    </script>
+  </body>
+</html>
